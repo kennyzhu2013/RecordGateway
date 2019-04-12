@@ -1,0 +1,15 @@
+# api监听
+http:
+#  address: 10.153.90.11:8080
+  address: 10.153.138.128:8080
+
+# IMS media域ip、占用IP段
+ims:
+  ip: 10.153.138.128
+  ports:
+    start: 5000
+    end: 10000
+
+timeout:
+  t1: 100
+  t2: 5000
