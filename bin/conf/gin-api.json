@@ -1,0 +1,9 @@
+{
+  "api": {
+    "LogLevel": 1,
+    "LogPath": "./log/api-gin.log",
+    "Version": 1,
+    "ApiName": "go.micro.api.gin",
+    "SrvName": "go.micro.srv.media-proxy"
+  }
+}

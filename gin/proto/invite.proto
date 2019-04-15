@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package go.micro.api.gateway;
+import "header.proto";
+
+service MediaProxy {
+	rpc CreateSession(SessionRequest) returns (SessionResponse) {}
+}
+
+message SessionRequest {
+    MessageHeader header = 1;
+    string caller = 2;
+    string callee = 3;
+}
+
+message SessionResponse {
+    int32 resultCode  = 1;
+}

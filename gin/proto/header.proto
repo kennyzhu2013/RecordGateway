@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package go.micro.api.gateway;
+
+message EndPoint {
+    string ip  = 1;
+    int32 port = 2;
+}
+
+message MessageHeader {
+    string callId = 1;
+    EndPoint asEp = 2;
+    EndPoint mpEp = 3;
+}
+
+
