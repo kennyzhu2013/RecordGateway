@@ -7,10 +7,11 @@
 */
 package main
 
-
 import (
 	"github.com/micro/go-micro/registry"
 	"github.com/pborman/uuid"
+	"conf"
+	. "modules"
 )
 
 // registry service ip and port to the ET-CD.
@@ -27,3 +28,14 @@ var (
 		},
 	}
 )
+
+func initService()  {
+	conf.Init( "./conf/gin-api.json" )
+
+	service.Name = conf.ApiConf.ApiName
+	var nodeSelf = service.Nodes[0]
+	nodeSelf.Address = conf.AppConf.IP
+	nodeSelf.Port = conf.AppConf.Port
+
+	Init()
+}

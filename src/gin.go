@@ -1,29 +1,41 @@
 package main
 
 import (
-	"log"
-	"github.com/micro/go-web"
+	"github.com/micro/go-micro/registry"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
-	. "github.com/kennyzhu/go-os/dbservice/api/gin/modules"
-	"github.com/kennyzhu/go-os/dbservice/api/conf"
+	. "modules"
+	"conf"
 )
 
 func main() {
-	conf.Init( "./conf/ginapi.json" )
+	initService()
 
-	// Create service
-	// must micro api --handler=http
-	service := web.NewService(
-		web.Name(conf.AppConf.ApiName), // " go.micro.web.dbservice"
-	)
-	service.Init()
+	// created in goroutine by gin.
+	go Modules.Router.Run( conf.AppConf.Address )
 
 	// Register modules and app.Run...
 	// All path processed by modules..
-	service.Handle("/", Modules.Router)
+	// service.Handle("/", Modules.App)
+	registry.Register(service)
 
-	// Run server
-	if err := service.Run(); err != nil {
-		log.Fatal(err)
+	// 通过registry可以获得服务器的ip和端口等信息...
+	// find self
+	rsp, err := registry.GetService(service.Name)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("Got service %+v\n", rsp[0])
+		fmt.Printf("Nodes info %+v\n", rsp[0].Nodes[0])
 	}
+
+	// micro health查询需要export MICRO_PROXY_ADDRESS=0.0.0.0:8002支持http json方式访问..
+	notify := make(chan os.Signal, 1)
+	signal.Notify(notify, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	<-notify
+
+	registry.Deregister(service)
 }

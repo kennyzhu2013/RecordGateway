@@ -26,7 +26,7 @@ func (s *examples) Preferences(ctx *gin.Context) {
 
 	switch action {
 	case "/GetPreference":
-		s.getPrefernces( ctx )
+		s.getPreferences( ctx )
 	case "/GetPreferencesList":
 		s.getPreferencesList( ctx )
 	default:
@@ -37,8 +37,8 @@ func (s *examples) Preferences(ctx *gin.Context) {
 	log.Debug("Preferences done!")
 }
 
-func (s *examples) getPrefernces(ctx *gin.Context) {
-	log.Info("Received getPrefernces http request")
+func (s *examples) getPreferences(ctx *gin.Context) {
+	log.Info("Received getPreferences http request")
 
 	user,_ := strconv.Atoi ( ctx.DefaultQuery("user", "1") )
 
@@ -59,11 +59,11 @@ func (s *examples) getPrefernces(ctx *gin.Context) {
 	ctx.JSON(int(response.ResultCode), map[string]string{
 		"message": string(prefersJson[:]),
 	})*/
+	prefersJson,_ := json.Marshal( response.Prefer )
 	ctx.JSON(int(response.ResultCode), gin.H{
-		"message": response.Prefer,
+		"message": string(prefersJson[:]),
 	})
-	log.Info("getPrefernces End:")
-	// log.Info(b)
+	log.Info("getPreferences End:")
 }
 
 func (s *examples) getPreferencesList(ctx *gin.Context) {
@@ -85,13 +85,8 @@ func (s *examples) getPreferencesList(ctx *gin.Context) {
 	}
 
 	prefersJson,_ := json.Marshal( response.Prefers )
-	/*
-	b, _ := json.Marshal(map[string]string{
-		"message": string(prefersJson[:]),
-	})*/
 	ctx.JSON(int(response.ResultCode), map[string]string{
 		"message": string(prefersJson[:]),
 	})
 	log.Info("getPreferencesList End:")
-	// log.Info(b)
 }
