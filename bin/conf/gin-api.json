@@ -7,7 +7,7 @@
     "Port": 8400
   },
   "api": {
-    "ApiName": "go.micro.api.gin",
-    "SrvName": "go.micro.srv.dbservice"
+    "ApiName": "go.micro.api.media-gateway",
+    "SrvName": "go.micro.api.gin"
   }
 }

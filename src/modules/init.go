@@ -8,11 +8,10 @@
 package modules
 
 import (
-	"github.com/micro/go-micro/client"
-	example "github.com/kennyzhu/go-os/dbservice/proto/example"
-	"conf"
+	"router"
 
 	"github.com/kennyzhu/go-os/log"
+	"github.com/micro/go-micro"
 )
 
 // All handlers init here.
@@ -22,12 +21,20 @@ func Init() {
 	Modules.Router.POST("/", NoModules)
 	Modules.Router.GET("/", NoModules)
 
-	// Examples Begin:micro api --handler=http as proxy, default is rpc .
-	// Base module router for rest full, Preferences is name of table or tables while Module equals database.
-	// Call url:curl "http://localhost:8004/Preferences/GetPreference?user=1"
-	e := new( examples )
-	e.cl = example.NewPreferencesService(conf.ApiConf.SrvName, client.DefaultClient)
-	Modules.Router.GET("/Preferences/*action", e.Preferences)
+	// Media-proxy init client here.
+	e := new( mediaProxy )
+	wrapper := router.NewClientWrapper("X-Media-Server")
+	service := micro.NewService(
+		micro.WrapClient(wrapper),
+	)
+	/*
+	serviceWeb :=  web.NewService(
+		web.MicroService(serviceBase),
+	)*/
+	service.Init()
+	// Use the generated client stub
+	e.cl = service.Client()
+	Modules.Router.GET("/Preferences/*action", e.Proxy)
 	// Examples End
 
 	// register other handlers here, each request run in goroutine.
