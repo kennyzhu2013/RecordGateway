@@ -63,6 +63,7 @@ func (s *mediaProxy) reverseProxy(ctx *gin.Context, action string) {
 	var headersContext context.Context = metadata.NewContext(context.Background(), headers )
 
 	// modify request body ....
+	// NewRequest
 	req := s.cl.NewRequest(conf.ApiConf.SrvName, method, string(b), client.WithContentType("application/json"))
 	var rsp string
 

@@ -26,18 +26,25 @@ type dispatch struct {
 	client *http.Client
 }
 
+var DefaultDispatch = &dispatch{
+	key : "X-Media-Server",
+	client: &http.Client{ Transport :
+		web.NewRoundTripper( web.WithRegistry(registry.DefaultRegistry),
+			web.WithSelector(roundBinSelect) )},
+}
+
+
 // no wrap client..
-func (s *dispatch) DefaultClient() *http.Client {
+/*
+func (s *dispatch) DefaultClient() http.Client {
 	rt := web.NewRoundTripper(
 		web.WithRegistry(registry.DefaultRegistry),
 		web.WithSelector(roundBinSelect),
 	)
 
-	s.client = &http.Client{
-		Transport: rt,
-	}
+	s.client.Transport = rt
 	return s.client
-}
+}*/
 
 // call rtp-proxy with client..
 // req and rsp is string here ...
@@ -50,7 +57,7 @@ func (s *dispatch) Call(ctx context.Context, req client.Request, rsp interface{}
 			selector.WithStrategy(roundBinSelect),
 		))
 
-
+		s.client.Post()
 		return s.Client.Call(ctx, req, rsp, nOpts...)
 	}
 
@@ -107,12 +114,10 @@ func (s *dispatch) Call(ctx context.Context, req client.Request, rsp interface{}
 }
 
 // NewClientWrapper is a wrapper which shards based on a header key value
-func NewClientWrapper(key string) client.Wrapper {
-	return func(c client.Client) client.Client {
-		return &dispatch{
-			key:    key,
-			Client: c,
-		}
+func NewClientWrapper(key string) *http.Client {
+	return &dispatch{
+		key:    key,
+		client:  http.DefaultClient,
 	}
 }
 
