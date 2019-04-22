@@ -9,18 +9,16 @@ package modules
 
 import (
 	"github.com/kennyzhu/go-os/log"
-	// proto "proto"
-	"context"
+
 	"github.com/gin-gonic/gin"
-	"github.com/micro/go-micro/client"
 	"conf"
 	"io/ioutil"
 
-	"github.com/micro/go-micro/metadata"
+	. "router"
 )
 
 type mediaProxy struct{
-	cl client.Client
+	cl WebClient
 }
 
 // All are run in goroutine
@@ -41,13 +39,12 @@ func (s *mediaProxy) Proxy(ctx *gin.Context) {
 }
 
 func (s *mediaProxy) reverseProxy(ctx *gin.Context, action string) {
-	// todo: 获取请求所有头部并全部写入到context中去..
-	// push map[string]string.
-	headers := make(map[string]string, 20)
+	// todo: 获取请求所有头部并全部写入到服务器上， push map[string]string.
+	var destination string
 	for k,v :=range ctx.Request.Header {
 		if "X-Media-Server" == k {
 			for _,address := range v {
-				headers[k] += address
+				destination += address
 			}
 			break
 		}
@@ -55,27 +52,32 @@ func (s *mediaProxy) reverseProxy(ctx *gin.Context, action string) {
 
 	// get request url..
 	b, _ := ioutil.ReadAll(ctx.Request.Body)
-	url := conf.ApiConf.SrvName + string("/Preferences") + action
-	log.Infof("Received reverseProxy http request:%v", method)
+	serviceUrl := conf.ApiConf.SrvName + string("/Preferences") + action + "?limit=2&index=1"
+	log.Infof("Received reverseProxy http request:%v", serviceUrl)
 
-	// push http url
-	headers["reverseProxy_url"] = url
-	var headersContext context.Context = metadata.NewContext(context.Background(), headers )
-
-	// modify request body ....
-	// NewRequest
-	req := s.cl.NewRequest(conf.ApiConf.SrvName, method, string(b), client.WithContentType("application/json"))
-	var rsp string
+	// Post http request to the destination ....
+	// rsp,err := s.cl.Post(serviceUrl, "application/json", destination, bytes.NewReader(b))
+	b = b
+	rsp,err := s.cl.TestGet(serviceUrl)
 
 	// Call service
-	if err := client.Call(headersContext, req, &rsp); err != nil {
-		ctx.JSON(500, map[string]string{
-			"message": err.Error(),
-		})
+	if err != nil {
+		ctx.JSON(500, err.Error())
+		log.Error(err)
+		return
+	}
+	defer rsp.Body.Close()
+
+	rBody, err := ioutil.ReadAll(rsp.Body)
+	if err != nil {
+		ctx.JSON(500, err.Error())
 		log.Error(err)
 		return
 	}
 
-	ctx.JSON(200, rsp)
-	log.Info("reverseProxy End:")
+	// send body..
+	var sBody = string(rBody)
+	ctx.Data(rsp.StatusCode, "application/json", rBody)
+
+	log.Infof("reverseProxy End with http body:%v", sBody)
 }

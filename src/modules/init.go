@@ -11,7 +11,6 @@ import (
 	"router"
 
 	"github.com/kennyzhu/go-os/log"
-	"github.com/micro/go-micro"
 )
 
 // All handlers init here.
@@ -23,17 +22,7 @@ func Init() {
 
 	// Media-proxy init client here.
 	e := new( mediaProxy )
-	wrapper := router.NewClientWrapper("X-Media-Server")
-	service := micro.NewService(
-		micro.WrapClient(wrapper),
-	)
-	/*
-	serviceWeb :=  web.NewService(
-		web.MicroService(serviceBase),
-	)*/
-	service.Init()
-	// Use the generated client stub
-	e.cl = service.Client()
+	e.cl = router.DefaultRouter
 	Modules.Router.GET("/Preferences/*action", e.Proxy)
 	// Examples End
 

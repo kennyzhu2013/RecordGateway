@@ -14,16 +14,17 @@ import (
 )
 
 // https://stackoverflow.com/questions/26707941/go-roundtripper-and-transport.
-func NewRoundTripper(opts ...Option) http.RoundTripper {
+func NewRoundShardTripper(opts ...Option) http.RoundTripper {
 	options := Options{
 		Registry: registry.DefaultRegistry,
 		Selector: selector.Random,
+		Destination: "X-Media-Server",
 	}
 	for _, o := range opts {
 		o(&options)
 	}
 
-	return &roundTripper{
+	return &roundShardTripper{
 		rt:   http.DefaultTransport,
 		opts: options,
 	}

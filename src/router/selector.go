@@ -49,7 +49,7 @@ func roundBinSelect(services []*registry.Service) selector.Next {
 		}
 	}
 
-	var i int
+	var i int = 0
 	var mtx sync.Mutex
 
 	// Round bin..

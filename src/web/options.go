@@ -15,6 +15,7 @@ import (
 type Options struct {
 	Registry registry.Registry
 	Selector selector.Strategy
+	Destination   string
 }
 
 type Option func(*Options)
@@ -28,5 +29,11 @@ func WithRegistry(r registry.Registry) Option {
 func WithSelector(s selector.Strategy) Option {
 	return func(o *Options) {
 		o.Selector = s
+	}
+}
+
+func WithDestination(d string) Option {
+	return func(o *Options) {
+		o.Destination = d
 	}
 }

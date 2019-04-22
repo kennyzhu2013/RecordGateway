@@ -9,16 +9,19 @@ package router
 
 import (
 	"github.com/micro/go-micro/registry"
-	"github.com/micro/go-micro/selector"
-	"github.com/micro/go-micro/client"
-	"github.com/micro/go-micro/metadata"
-	"context"
-	"strings"
-	"strconv"
 	"net/http"
 
 	"web"
+	"io"
 )
+
+type WebClient interface {
+	// set destination
+	Post(serviceUrl string, contentType string, destination string, body io.Reader) (resp *http.Response, err error)
+
+	// for test
+	TestGet(serviceUrl string) (resp *http.Response, err error)
+}
 
 // use http instead...
 type dispatch struct {
@@ -26,10 +29,10 @@ type dispatch struct {
 	client *http.Client
 }
 
-var DefaultDispatch = &dispatch{
+var DefaultRouter = &dispatch{
 	key : "X-Media-Server",
 	client: &http.Client{ Transport :
-		web.NewRoundTripper( web.WithRegistry(registry.DefaultRegistry),
+		web.NewRoundShardTripper( web.WithRegistry(registry.DefaultRegistry),
 			web.WithSelector(roundBinSelect) )},
 }
 
@@ -46,78 +49,29 @@ func (s *dispatch) DefaultClient() http.Client {
 	return s.client
 }*/
 
-// call rtp-proxy with client..
-// req and rsp is string here ...
-func (s *dispatch) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error {
-	// get headers
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		// no header, defer to client
-		nOpts := append(opts, client.WithSelectOption(
-			selector.WithStrategy(roundBinSelect),
-		))
-
-		s.client.Post()
-		return s.Client.Call(ctx, req, rsp, nOpts...)
+func (c *dispatch) Post(serviceUrl string, contentType string, destination string, body io.Reader) (resp *http.Response, err error) {
+	// http://go.micro.api.iris/Preferences/GetPreferencesList?limit=2&index=1...
+	httpServiceUrl := "http://" + serviceUrl
+	req, err := http.NewRequest("POST", httpServiceUrl, body)
+	if err != nil {
+		return nil, err
 	}
 
-	// get key val
-	val := md[s.key]
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set(c.key, destination)
+	return c.client.Do(req)
+}
 
-	// noop on nil value
-	if len(val) == 0 {
-		// no header or value, defer to client
-		nOpts := append(opts, client.WithSelectOption(
-			// create a selector strategy
-			selector.WithStrategy(roundBinSelect),
-		) )
-		return s.Client.Call(ctx, req, rsp, nOpts...)
-	}
-
-	// split ip:port.
-	address := strings.Split(val, ":")
-	if len(address) < 2 {
-		// valid ip and port, defer to client
-		nOpts := append(opts, client.WithSelectOption( selector.WithStrategy(roundBinSelect) ) )
-		return s.Client.Call(ctx, req, rsp, nOpts...)
-	}
-	proxyIp := address[0]
-	proxyPort,_ := strconv.Atoi( address[1] )
-
-	nOpts := append(opts, client.WithSelectOption(
-		// create a selector strategy
-		selector.WithStrategy(func(services []*registry.Service) selector.Next {
-			// flatten
-			var nodeResult *registry.Node
-
-			// create the next func that always returns our node
-			return func() (*registry.Node, error) {
-				// Filter the nodes for serverTag marked by the server..
-				for _, service := range services {
-					for _, node := range service.Nodes {
-						if node.Address == proxyIp && node.Port == proxyPort {
-							nodeResult = node
-						}
-					}
-				}
-
-				if nil == nodeResult {
-					return nil, selector.ErrNoneAvailable
-				}
-
-				return nodeResult, nil
-			}
-		}),
-	))
-
-	return s.Client.Call(ctx, req, rsp, nOpts...)
+func (c *dispatch) TestGet(serviceUrl string)(resp *http.Response, err error)  {
+	httpServiceUrl := "http://" + serviceUrl
+	return c.client.Get(httpServiceUrl)
 }
 
 // NewClientWrapper is a wrapper which shards based on a header key value
-func NewClientWrapper(key string) *http.Client {
+func NewHttpRouter(key string, httpClient *http.Client) WebClient {
 	return &dispatch{
 		key:    key,
-		client:  http.DefaultClient,
+		client:  httpClient,
 	}
 }
 

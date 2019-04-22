@@ -19,11 +19,22 @@ import (
 var (
 	service = &registry.Service{
 		Name: "go.micro.api.gin-gateway",
+		Metadata: map[string]string{
+			"serverTag": "media-gateway",  // service desc.
+		},
+		Endpoints: []*registry.Endpoint {
+			{
+				Name: "Preferences.GetPreferencesList",
+			},
+		},
 		Nodes: []*registry.Node{
 			{
 				Id:      "go.micro.api.gin-gateway-" + uuid.NewUUID().String(),
 				Address: "localhost",
 				Port:    8400,
+				Metadata: map[string]string{
+					"serverTag": "media-gateway",  // node division.
+				},
 			},
 		},
 	}
