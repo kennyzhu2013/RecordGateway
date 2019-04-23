@@ -3,11 +3,16 @@ package config
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strconv"
 )
 
-type AppConf struct {
+var AppConf struct {
 	Http struct {
-		Address string
+		Ip string
+		Port int
+	}
+	Api struct {
+		SrvName string
 	}
 	Ims struct {
 		Ip    string
@@ -21,29 +26,24 @@ type AppConf struct {
 		T2 int
 	}
 	Name string `yaml:"omitempty"`
+	HttpAddress string `yaml:"omitempty"`
 }
-
-var appconf *AppConf
 
 func InitConfig(filepath string) {
-	if appconf != nil {
-		panic("appconf have already been init")
+	if "" == filepath {
+		filepath = "setting.yaml"
 	}
-	yamlFile, err := ioutil.ReadFile("setting.yaml")
+	yamlFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		panic(err.Error())
 	}
-	appconf = &AppConf{}
-	err = yaml.Unmarshal(yamlFile, &appconf)
+	err = yaml.Unmarshal(yamlFile, &AppConf)
 	if err != nil {
 		panic(err.Error())
 	}
 
-}
-
-func GetConfig() *AppConf {
-	if appconf == nil {
-		panic("config is nil")
+	if "" == AppConf.Http.Ip {
+		AppConf.Http.Ip = "localhost"
 	}
-	return appconf
+	AppConf.HttpAddress = AppConf.Http.Ip + ":" + strconv.Itoa(AppConf.Http.Port)
 }

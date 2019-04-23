@@ -51,8 +51,8 @@ func (s *Session) Start() {
 		remoteAddrLeft := s.left
 		remoteAddrRight := s.right
 
-		fileLeft := record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_early_left.raw", s.sessionid), s.media)
-		fileRight := record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_early_right.raw", s.sessionid), s.media)
+		fileLeft := record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_early_left.amr", s.sessionid), s.media)
+		fileRight := record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_early_right.amr", s.sessionid), s.media)
 		defer fileLeft.Close()
 		defer fileRight.Close()
 
@@ -62,10 +62,10 @@ func (s *Session) Start() {
 		for {
 			select {
 			case <-s.wait200:
-				fileLeft = record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_left.raw", s.sessionid), s.media)
-				fileRight = record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_right.raw", s.sessionid), s.media)
-				fileLeft.Close()
-				fileRight.Close()
+				fileLeft = record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_left.amr", s.sessionid), s.media)
+				fileRight = record.CreateRecordFile(fmt.Sprintf("/tmp/record/%s_right.amr", s.sessionid), s.media)
+				defer fileLeft.Close()
+				defer fileRight.Close()
 			case <-s.ctx.Done():
 				//fmt.Println("<<rtp stoped!>> - cancel")
 				s.wg.Done()
@@ -110,11 +110,12 @@ func (s *Session) Start() {
 		defer conn.Close()
 		remoteAddrLeft, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", s.left.IP.String(), s.left.Port+1))
 		remoteAddrRight, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", s.right.IP.String(), s.right.Port+1))
+		fmt.Printf("start rtcp - left:%s  right:%s\n", remoteAddrLeft, remoteAddrRight)
 		data := make([]byte, 200)
 		for {
 			select {
 			case <-s.ctx.Done():
-				//fmt.Println("<<rtcp stoped!>> - cancel")
+				fmt.Println("<<rtcp stoped!>> - cancel")
 				s.wg.Done()
 				return
 			default:
@@ -125,10 +126,15 @@ func (s *Session) Start() {
 					continue
 				}
 				//fmt.Println(remoteAddr, "receive:", string(data[:n]))
-				if remoteAddr.Port == s.left.Port {
+
+				if remoteAddr.Port == (s.left.Port + 1) {
 					conn.WriteToUDP(data[:n], remoteAddrRight)
-				} else {
+					fmt.Println("from left:", s.left.IP.String(), "to right:", remoteAddrRight.IP.String())
+				} else if remoteAddr.Port == (s.right.Port + 1) {
 					conn.WriteToUDP(data[:n], remoteAddrLeft)
+					fmt.Println("from right:", s.right.IP.String(), "to left:", remoteAddrLeft.IP.String())
+				} else {
+					fmt.Println("fuckkkkkkkkkkkkkk")
 				}
 			}
 		}
@@ -141,7 +147,7 @@ func (s *Session) Update(leftip string, leftport int, rightip string, rightport 
 }
 
 func (s *Session) SplitRecord() {
-	close(s.wait200)
+	s.wait200 <- true
 }
 
 type SessionManage struct {

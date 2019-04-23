@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-//申请端口
+// 申请端口
 func EndpointBindLeftHandler(ctx *gin.Context) {
 	var params struct {
 		Callid   string `binding:"required"`
@@ -22,7 +22,7 @@ func EndpointBindLeftHandler(ctx *gin.Context) {
 		return
 	}
 
-	//fmt.Println(params.Callid, params.Leftip, params.Leftport)
+	// fmt.Println(params.Callid, params.Leftip, params.Leftport)
 
 	sess, _ := core.GetSessionManage()
 	ps, err := sess.BindLeft(params.Callid, params.Leftip, params.Leftport)
@@ -41,13 +41,13 @@ func EndpointBindLeftHandler(ctx *gin.Context) {
 
 }
 
-//开始工作
+// 开始工作
 func EndpointBindRightHandler(ctx *gin.Context) {
 	var params struct {
 		Callid    string `binding:"required"`
 		Rightip   string `binding:"required"`
 		Rightport int    `binding:"required"`
-		media     string `binding:"required"`
+		Media     string `binding:"required"`
 	}
 
 	if err := ctx.BindJSON(&params); err != nil {
@@ -58,7 +58,7 @@ func EndpointBindRightHandler(ctx *gin.Context) {
 	}
 
 	sess, _ := core.GetSessionManage()
-	err := sess.BindRight(params.Callid, params.Rightip, params.Rightport, params.media)
+	err := sess.BindRight(params.Callid, params.Rightip, params.Rightport, params.Media)
 	if err != nil {
 		fmt.Println(err.Error())
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

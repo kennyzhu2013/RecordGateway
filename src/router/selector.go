@@ -19,6 +19,11 @@ import (
 var (
 	// Set media-proxy tag, if any services discovered for et-cd cluster.
 	serverTag = "media-proxy"
+
+	// for Bucket algorithm .
+	maxCalls  = 2000
+	upLimits = 90
+	downLimits = 70
 )
 
 func init() {
@@ -43,7 +48,7 @@ func roundBinSelect(services []*registry.Service) selector.Next {
 	// Filter the nodes for serverTag marked by the server..
 	for _, service := range services {
 		for _, node := range service.Nodes {
-			if node.Metadata["serverTag"] == serverTag {
+			if node.Metadata["serverTag"] == serverTag && bHealthNodesByWeights(node) {
 				nodes = append(nodes, node)
 			}
 		}
@@ -62,4 +67,10 @@ func roundBinSelect(services []*registry.Service) selector.Next {
 }
 
 // add stats info to select.
+// weights is set by clients.
+// support 70%-90%, Bucket algorithm
+func bHealthNodesByWeights(node *registry.Node) bool {
 
+	// Todo: filter weights data.
+	nodeMetas := node.Metadata
+}
