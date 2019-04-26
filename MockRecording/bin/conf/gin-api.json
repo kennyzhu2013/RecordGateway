@@ -1,0 +1,13 @@
+{
+  "app": {
+    "LogLevel": 1,
+    "LogPath": "./log/api-gin.log",
+    "Version": 1,
+    "IP": "localhost",
+    "Port": 8402
+  },
+  "api": {
+    "ApiName": "go.micro.api.gin",
+    "SrvName": "go.micro.srv.dbservice"
+  }
+}

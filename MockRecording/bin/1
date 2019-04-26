@@ -1,0 +1,2 @@
+go install github.com/kennyzhu/Gateway/src
+mv /home/zhuwei/go/bin/src ../bin/
