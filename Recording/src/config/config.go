@@ -25,7 +25,15 @@ var AppConf struct {
 		T1 int
 		T2 int
 	}
+	Rabbitmq struct{
+		Topic 		string
+		Url   		string
+		PrefetchCount int
+		PrefetchGlobal bool
+	}
 	Name string `yaml:"omitempty"`
+
+	// add for var
 	HttpAddress string `yaml:"omitempty"`
 }
 

@@ -27,8 +27,8 @@ func GetPortSuiteHelper() *PortSuiteHelper {
 	if portSuiteHelper == nil {
 
 		portSuiteHelper = &PortSuiteHelper{
-			startPort: config.GetConfig().Ims.Ports.Start,
-			capacity: (config.GetConfig().Ims.Ports.End - config.GetConfig().Ims.Ports.Start)/2,
+			startPort: config.AppConf.Ims.Ports.Start,
+			capacity: (config.AppConf.Ims.Ports.End - config.GetConfig().Ims.Ports.Start)/2,
 			portsUsed: map[int]bool{},
 			lastAlloted: -1,
 		}

@@ -7,5 +7,5 @@ import (
 
 func main() {
 	config.InitConfig("setting.yaml")
-	fmt.Println(config.GetConfig().Name  == nil)
+	fmt.Println(config.AppConf.Name  == nil)
 }

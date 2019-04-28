@@ -56,7 +56,7 @@ func (s *Session) Start() {
 		defer fileLeft.Close()
 		defer fileRight.Close()
 
-		t1, t2 := config.GetConfig().Timeout.T1, config.GetConfig().Timeout.T2
+		t1, t2 := config.AppConf.Timeout.T1, config.AppConf.Timeout.T2
 		tWait := t1
 		data := make([]byte, 200)
 		for {
@@ -67,11 +67,11 @@ func (s *Session) Start() {
 				defer fileLeft.Close()
 				defer fileRight.Close()
 			case <-s.ctx.Done():
-				//fmt.Println("<<rtp stoped!>> - cancel")
+				// fmt.Println("<<rtp stoped!>> - cancel")
 				s.wg.Done()
 				return
 			default:
-				//fmt.Println("------------- rtp ------------>")
+				// fmt.Println("------------- rtp ------------>")
 				conn.SetReadDeadline(time.Now().Add(time.Millisecond * time.Duration(t1)))
 				n, remoteAddr, err := conn.ReadFromUDP(data)
 				if err != nil {
@@ -151,7 +151,7 @@ func (s *Session) SplitRecord() {
 }
 
 type SessionManage struct {
-	store   map[string]*Session
+	store   map[string]*Session // call count
 	localIp string
 	mu      sync.Mutex
 }

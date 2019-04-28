@@ -16,6 +16,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"monitor"
+	"etcdv3"
+	"time"
+	"core"
 )
 
 // registry service ip and port to the ET-CD.
@@ -33,6 +37,7 @@ var (
 				Port:    8400,
 				Metadata: map[string]string{
 					"serverTag": "media-proxy",  // server division.
+					monitor.ServiceStatus: monitor.NormalState,
 				},
 			},
 		},
@@ -51,25 +56,49 @@ func initService()  {
 	Init()
 }
 
+// start registry and monitor ...
 func registryStart()  {
 	// Register modules and app.Run...
-	// Here default registry is consul.
-	registry.Register(service)
+	etcdMonitor := monitor.NewMonitor(etcdv3.NewRegistry)
+	mr := etcdMonitor.GetMonitorRegistry()
+	registry.DefaultRegistry = mr
+	mr.Register(service)
 
 	// 通过registry可以获得服务器的ip和端口等信息...
 	// find self
-	rsp, err := registry.GetService(service.Name)
+	rsp, err := mr.GetService(service.Name)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Printf("Got service %+v\n", rsp[0])
 		fmt.Printf("Nodes info %+v\n", rsp[0].Nodes[0])
 	}
+	ex := make(chan bool)
+	go startMonitor(etcdMonitor, ex)
 
 	// micro health查询需要export MICRO_PROXY_ADDRESS=0.0.0.0:8002支持http json方式访问..
+	// notify。
 	notify := make(chan os.Signal, 1)
 	signal.Notify(notify, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
 	<-notify
 
-	registry.Deregister(service)
+	close(ex)
+	mr.Deregister(service)
+}
+
+// send heartbeats to servers..
+func startMonitor(m monitor.Monitor, exit chan bool)  {
+	t := time.NewTicker(monitor.HeartBeatTTL / 2)
+	sessionManage,_ := core.GetSessionManage()
+
+	for {
+		select {
+		case <-t.C:
+			// get call counts.
+			m.PushHeartBeat(service, sessionManage.Size())
+		case <-exit:
+			t.Stop()
+			return
+		}
+	}
 }
