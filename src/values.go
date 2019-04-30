@@ -12,6 +12,8 @@ import (
 	"github.com/pborman/uuid"
 	"conf"
 	. "modules"
+
+	"github.com/kennyzhu/go-os/plugins/etcdv3"
 )
 
 // registry service ip and port to the ET-CD.
@@ -48,5 +50,6 @@ func initService()  {
 	nodeSelf.Address = conf.AppConf.IP
 	nodeSelf.Port = conf.AppConf.Port
 
+	registry.DefaultRegistry = etcdv3.DefaultEtcdRegistry
 	Init()
 }

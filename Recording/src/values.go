@@ -20,6 +20,9 @@ import (
 	"etcdv3"
 	"time"
 	"core"
+
+	"log/log"
+	"util"
 )
 
 // registry service ip and port to the ET-CD.
@@ -53,6 +56,25 @@ func initService()  {
 	nodeSelf.Address = AppConf.Http.Ip
 	nodeSelf.Port = AppConf.Http.Port
 
+	// init log here.
+	log.InitLogger(
+		log.WithLevel( log.Level(AppConf.Logger.LogLevel) ),
+		log.WithFields(log.Fields{
+			"logger": "api",
+		}),
+		log.WithOutput(
+			log.NewOutput(log.OutputName(AppConf.Logger.LogPath)),
+		),
+	)
+	log.Infof("logger init, log name:%v", AppConf.Logger.LogPath)
+
+	// init rabbit broker, if failed ,quit ..
+	if err := util.InitBroker(); err != nil {
+		log.Errorf("logger init, log name:%v", err)
+
+		// for test, not quit
+		// os.Exit(-1)
+	}
 	Init()
 }
 

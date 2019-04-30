@@ -15,10 +15,13 @@ import (
 
 	example "github.com/kennyzhu/go-os/dbservice/proto/example"
 	"github.com/micro/go-web"
+	"github.com/kennyzhu/go-os/plugins/etcdv3"
+	"github.com/micro/go-micro/registry"
 )
 
 func main()  {
 	// r, err := http.Get("http://localhost:8002/dbservice/Preferences/PreferenceList?limit=2&index=1")
+	registry.DefaultRegistry = etcdv3.NewRegistry()
 	service := web.NewService()
 	if err := service.Init(); err != nil {
 		log.Fatal(err)
@@ -26,8 +29,8 @@ func main()  {
 	c := service.Client()
 
 	// not need micro web, call by registry
-	// can be called by any other server..
-	r,err := c.Get("http://go.micro.api.gin/Preferences/GetPreferencesList?limit=2&index=1")
+	// can be called by any other server, eg: proxy go.micro.api.gin.
+	r,err := c.Get("http://go.micro.api.media-gateway/Preferences/GetPreferencesList?limit=2&index=1")
 	if err != nil {
 		fmt.Println(err)
 		return

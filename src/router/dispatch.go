@@ -8,11 +8,11 @@
 package router
 
 import (
-	"github.com/micro/go-micro/registry"
 	"net/http"
 
 	"web"
 	"io"
+	"github.com/kennyzhu/go-os/plugins/etcdv3"
 )
 
 type WebClient interface {
@@ -32,7 +32,7 @@ type dispatch struct {
 var DefaultRouter = &dispatch{
 	key : "X-Media-Server",
 	client: &http.Client{ Transport :
-		web.NewRoundShardTripper( web.WithRegistry(registry.DefaultRegistry),
+		web.NewRoundShardTripper( web.WithRegistry(etcdv3.DefaultEtcdRegistry),
 			web.WithSelector(roundBinSelect) )},
 }
 

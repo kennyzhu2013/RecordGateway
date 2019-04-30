@@ -31,6 +31,10 @@ var AppConf struct {
 		PrefetchCount int
 		PrefetchGlobal bool
 	}
+	Logger struct {
+		LogLevel int
+		LogPath  string
+	}
 	Name string `yaml:"omitempty"`
 
 	// add for var

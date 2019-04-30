@@ -8,8 +8,8 @@
 package web
 
 import (
-	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/selector"
+	"github.com/micro/go-micro/registry"
 )
 
 type Options struct {
@@ -19,7 +19,6 @@ type Options struct {
 }
 
 type Option func(*Options)
-
 func WithRegistry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r

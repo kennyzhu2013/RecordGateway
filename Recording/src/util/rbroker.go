@@ -8,36 +8,61 @@
 package util
 
 import (
-	"fmt"
-	"time"
 	"rabbitmq"
 	"github.com/micro/go-micro/broker"
-	"github.com/kennyzhu/go-os/log"
+	"log/log"
+
+	"github.com/pborman/uuid"
+	"config"
+	"fmt"
 )
 
 var (
-	topic = "recording.audio"
+	pubTopic = "recording.audio"
 	rbroker = rabbitmq.NewBroker()
 )
 
-func InitBroker()  {
+func InitBroker()  error {
+	// init with given url and user name.
+	rbroker.Init( broker.Addrs(config.AppConf.Rabbitmq.Url) )
+	pubTopic = config.AppConf.Rabbitmq.Topic
 
+	// use one connect
+	if err := rbroker.Connect(); err != nil {
+		log.Fatalf("InitBroker Connect error: %v", err)
+		return err
+	}
+	return nil
 }
 
-// for rabbit-mq
+// for rabbit-mq, support goroutine.
 func PubMessage(body []byte)  {
+	// use generated id for message.
 	msg := &broker.Message{
 		Header: map[string]string{
-			"id": fmt.Sprintf("%d", i),
+			"id":  "recording.audio-" + uuid.NewUUID().String(),
 		},
-		Body: []byte(fmt.Sprintf("%d: %s", i, time.Now().String())),
+		Body: body,
 	}
 
-	if err := rbroker.Publish(topic, msg); err != nil {
-		log.Printf("[pub] failed: %v", err)
+	if err := rbroker.Publish(pubTopic, msg); err != nil {
+		log.Errorf("[pub] failed: %v", err)
 	} else {
-		fmt.Println("[pub] pubbed message:", string(msg.Body))
+		log.Debugf("[pub] pubbed message:%v", string(msg.Body))
 	}
+}
 
-	uuid.NewUUID()
+// this is example
+func subCallback(p broker.Publication) error {
+	fmt.Println("[sub] received message:", string(p.Message().Body), "header", p.Message().Header)
+	return nil
+}
+
+// get message from message queue, need it?
+// must run in goroutine, handler is callback func
+func SubMessage(subTopic string, handler broker.Handler)  {
+	_, err := rbroker.Subscribe(subTopic, subCallback)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

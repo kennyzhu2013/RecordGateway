@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/micro/go-micro/registry"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,6 +8,8 @@ import (
 
 	. "modules"
 	"conf"
+
+	"github.com/micro/go-micro/registry"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 	// Register modules and app.Run...
 	// All path processed by modules..
 	// service.Handle("/", Modules.App)
+
 	registry.Register(service)
 
 	// 通过registry可以获得服务器的ip和端口等信息...

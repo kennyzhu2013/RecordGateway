@@ -13,18 +13,17 @@ import (
 	"time"
 	"github.com/micro/go-micro/registry"
 	"sync"
+	"strconv"
+
+	"github.com/kennyzhu/go-os/plugins/monitor"
 )
 
 
 var (
 	// Set media-proxy tag, if any services discovered for et-cd cluster.
 	serverTag = "media-proxy"
-
-	// for Bucket algorithm .
-	maxCalls  = 2000
-	upLimits = 90
-	downLimits = 70
 )
+
 
 func init() {
 	rand.Seed(time.Now().Unix())
@@ -54,6 +53,12 @@ func roundBinSelect(services []*registry.Service) selector.Next {
 		}
 	}
 
+	if len(nodes) == 0 {
+		return func() (*registry.Node, error) {
+			return nil, selector.ErrNotFound
+		}
+	}
+
 	var i int = 0
 	var mtx sync.Mutex
 
@@ -73,4 +78,22 @@ func bHealthNodesByWeights(node *registry.Node) bool {
 
 	// Todo: filter weights data.
 	nodeMetas := node.Metadata
+	timeNow := time.Now().Unix()
+	if ts, ok := nodeMetas["timestamp"]; ok {
+		timestamp,_ := strconv.ParseInt(ts, 10, 64)
+		if timestamp + int64( monitor.HeartBeatTTL.Seconds() ) < timeNow {
+			// long time no heartbeats
+			return false
+		}
+
+	}
+
+	if status, ok := nodeMetas[monitor.ServiceStatus]; ok {
+		if status != monitor.NormalState{
+			return false
+		}
+	}
+
+	// default
+	return true
 }
